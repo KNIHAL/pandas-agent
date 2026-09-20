@@ -1,10 +1,10 @@
 last updated: 2026-09-20
 
-Current active module: tool-gateway
+Current active module: agent-core
 
 # Module Status
 
-- agent-core — ⬜ pending
+- agent-core — 🔧 in-progress (branch feature/agent-core, off feature/tool-gateway; LLMProvider interface done, 12/12 tests passing)
 - tool-gateway — ✅ done (branch feature/tool-gateway; all tasks complete, 44/44 tests passing)
 - execution-backend — ⬜ pending (legacy `core/execution.py` exists from old CrewAI version, needs review)
 - data-catalog — ⬜ pending
