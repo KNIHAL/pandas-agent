@@ -15,6 +15,9 @@ from pydantic import BaseModel, ValidationError
 
 from .audit import AuditLogger
 from .contracts import FailureBehavior, Permission, ToolContract
+from .errors import PermissionDeniedError, ToolGatewayError, exception_for
+
+__all__ = ["ToolError", "ToolResult", "ToolGateway", "PermissionDeniedError"]
 
 
 class ToolError(BaseModel):
@@ -28,10 +31,6 @@ class ToolResult(BaseModel):
     data: Any | None = None
     error: ToolError | None = None
     duration_ms: float = 0.0
-
-
-class PermissionDeniedError(Exception):
-    """Raised when FailureBehavior.RAISE is set and permission is missing."""
 
 
 class ToolGateway:
@@ -73,6 +72,8 @@ class ToolGateway:
                 start=start,
                 error_type="NOT_FOUND",
                 message=f"No tool registered as '{tool_name}'.",
+                # No contract to read a failure_behavior from — never raise for an
+                # unknown tool, since the caller can't have opted into that.
                 failure_behavior=FailureBehavior.RETURN_ERROR,
             )
 
@@ -100,34 +101,29 @@ class ToolGateway:
                 failure_behavior=contract.failure_behavior,
             )
 
-        # 3. Execute with timeout, honoring RETRY_ONCE
+        # 3. Execute with timeout (tightened by limits.max_query_seconds if set),
+        #    honoring RETRY_ONCE.
+        effective_timeout = contract.timeout_seconds
+        if contract.limits.max_query_seconds is not None:
+            effective_timeout = min(effective_timeout, contract.limits.max_query_seconds)
+
         attempts = 2 if contract.failure_behavior == FailureBehavior.RETRY_ONCE else 1
         last_exc: Exception | None = None
         raw_output = None
-        for attempt in range(attempts):
+        for _attempt in range(attempts):
             try:
-                raw_output = self._run_with_timeout(contract, validated_input)
+                raw_output = self._run_with_timeout(contract, validated_input, effective_timeout)
                 last_exc = None
                 break
             except FutureTimeoutError:
                 last_exc = TimeoutError(
-                    f"Tool '{tool_name}' exceeded timeout of {contract.timeout_seconds}s."
+                    f"Tool '{tool_name}' exceeded timeout of {effective_timeout}s."
                 )
             except Exception as e:  # noqa: BLE001 - deliberately broad, gateway boundary
                 last_exc = e
 
         if last_exc is not None:
             error_type = "TIMEOUT" if isinstance(last_exc, TimeoutError) else "EXECUTION_ERROR"
-            if contract.failure_behavior == FailureBehavior.RAISE:
-                self._audit.record(
-                    tool_name=tool_name,
-                    permission=contract.permission.value,
-                    success=False,
-                    duration_ms=(time.monotonic() - start) * 1000,
-                    error_type=error_type,
-                    error_message=str(last_exc),
-                )
-                raise last_exc
             return self._fail(
                 tool_name=tool_name,
                 permission=contract.permission.value,
@@ -135,6 +131,7 @@ class ToolGateway:
                 error_type=error_type,
                 message=str(last_exc),
                 failure_behavior=contract.failure_behavior,
+                cause=last_exc,
             )
 
         # 4. Output validation
@@ -153,9 +150,26 @@ class ToolGateway:
                 failure_behavior=contract.failure_behavior,
             )
 
-        # 5. Limit enforcement (row truncation convention: output.truncate(max_rows))
+        # 5. Limit enforcement
+        truncated = False
         if contract.limits.max_rows is not None and hasattr(validated_output, "truncate"):
             validated_output.truncate(contract.limits.max_rows)  # type: ignore[attr-defined]
+            truncated = True
+
+        if contract.limits.max_output_bytes is not None:
+            size = len(validated_output.model_dump_json().encode("utf-8"))
+            if size > contract.limits.max_output_bytes:
+                return self._fail(
+                    tool_name=tool_name,
+                    permission=contract.permission.value,
+                    start=start,
+                    error_type="OUTPUT_TOO_LARGE",
+                    message=(
+                        f"Output for '{tool_name}' is {size} bytes, "
+                        f"exceeding the {contract.limits.max_output_bytes} byte limit."
+                    ),
+                    failure_behavior=contract.failure_behavior,
+                )
 
         duration_ms = (time.monotonic() - start) * 1000
         self._audit.record(
@@ -163,12 +177,15 @@ class ToolGateway:
             permission=contract.permission.value,
             success=True,
             duration_ms=duration_ms,
+            extra={"truncated": True} if truncated else None,
         )
         return ToolResult(success=True, data=validated_output, duration_ms=duration_ms)
 
-    def _run_with_timeout(self, contract: ToolContract, validated_input: BaseModel) -> Any:
+    def _run_with_timeout(
+        self, contract: ToolContract, validated_input: BaseModel, timeout_seconds: float
+    ) -> Any:
         future = self._executor.submit(contract.handler, validated_input)
-        return future.result(timeout=contract.timeout_seconds)
+        return future.result(timeout=timeout_seconds)
 
     def _fail(
         self,
@@ -179,6 +196,7 @@ class ToolGateway:
         error_type: str,
         message: str,
         failure_behavior: FailureBehavior,
+        cause: Exception | None = None,
     ) -> ToolResult:
         duration_ms = (time.monotonic() - start) * 1000
         self._audit.record(
@@ -189,6 +207,11 @@ class ToolGateway:
             error_type=error_type,
             error_message=message,
         )
+        if failure_behavior == FailureBehavior.RAISE:
+            exc: ToolGatewayError = exception_for(error_type, message)
+            if cause is not None:
+                raise exc from cause
+            raise exc
         return ToolResult(
             success=False,
             error=ToolError(type=error_type, message=message),

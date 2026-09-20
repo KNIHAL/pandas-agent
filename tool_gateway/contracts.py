@@ -39,7 +39,12 @@ class ToolLimits(BaseModel):
         default=None, description="Max rows a tool may return/process. None = no row limit."
     )
     max_query_seconds: float | None = Field(
-        default=None, description="Max wall-clock seconds for the underlying query/op."
+        default=None,
+        description=(
+            "Max wall-clock seconds for the underlying query/op. If set, the gateway "
+            "uses min(timeout_seconds, max_query_seconds) as the enforced timeout — "
+            "use this to give a specific call a tighter budget than the tool's default."
+        ),
     )
     max_output_bytes: int | None = Field(
         default=None, description="Max size of the tool's output payload in bytes."
