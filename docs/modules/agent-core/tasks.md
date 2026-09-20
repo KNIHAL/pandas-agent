@@ -3,6 +3,7 @@ last updated: 2026-09-20
 # agent-core — Tasks
 
 - [x] Define `LLMProvider` interface
+- [x] Gemini adapter
 - [ ] Gemini adapter
 - [ ] Claude adapter
 - [ ] Groq adapter
