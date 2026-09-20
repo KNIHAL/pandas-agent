@@ -4,6 +4,7 @@ last updated: 2026-09-20
 
 - [x] Define `LLMProvider` interface
 - [x] Gemini adapter
+- [x] Claude adapter
 - [ ] Gemini adapter
 - [ ] Claude adapter
 - [ ] Groq adapter

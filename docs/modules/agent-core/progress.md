@@ -19,7 +19,13 @@ needs to import `tool_gateway`, which isn't merged to the base branch yet).
   `LLMProviderError`.
 - Tests: `tests/test_agent_core_gemini.py`, 13/13 passing, all against a
   mocked `genai.Client` — no API key needed/used.
-- Next: Claude adapter, then Groq adapter — one at a time, each fully
-  tested before the next (same discipline as tool-gateway). No live-API
-  testing here (no keys configured in this environment); live testing is
-  Kumar's call once he has keys set.
+- `agent_core/providers/claude.py` — `ClaudeProvider`, backed by the `anthropic`
+  SDK. Same translation-as-standalone-functions pattern as Gemini
+  (`_to_anthropic_messages`, `_to_anthropic_tools`, `_from_anthropic_response`).
+  Notable: `tools`/`system` kwargs are only added to the request dict when
+  non-empty (Anthropic's SDK expects them omitted, not `None`).
+- Tests: `tests/test_agent_core_claude.py`, 16/16 passing, mocked
+  `anthropic.Anthropic` client — no API key needed.
+- Next: Groq adapter — one at a time, each fully tested before the next.
+  No live-API testing here (no keys configured); live testing is Kumar's
+  call once he has keys set.
