@@ -1,11 +1,11 @@
 last updated: 2026-09-20
 
-Current active module: none (not started yet)
+Current active module: tool-gateway
 
 # Module Status
 
 - agent-core — ⬜ pending
-- tool-gateway — ⬜ pending
+- tool-gateway — 🔧 in-progress (branch not yet created; deps installed: pydantic, python-dotenv)
 - execution-backend — ⬜ pending (legacy `core/execution.py` exists from old CrewAI version, needs review)
 - data-catalog — ⬜ pending
 - connectors — ⬜ pending
