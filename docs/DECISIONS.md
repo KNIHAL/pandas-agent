@@ -5,3 +5,4 @@ last updated: 2026-09-20
 - 2026-09-20 — Dropping CrewAI, building agent loop from scratch in Python. Why: no dependency on any agentic framework, full control over reasoning/tool-selection loop.
 - 2026-09-20 — Adopted docs/ structure (OVERVIEW, HOW_TO_WORK, STATUS, DECISIONS, modules/*) for per-module dedicated chats. Why: avoid re-feeding full spec every chat, save tokens, keep each module self-contained.
 - 2026-09-20 — Reuse `core/chart_generators/*` as-is (no CrewAI/MCP coupling in that code). Why: clean OOP, framework-independent already.
+- 2026-09-20 — Module code directories use snake_case (e.g. `tool_gateway/`), not the kebab-case used by `docs/modules/<name>/`. Why: Python can't import a hyphenated package name; snake_case is the only workable choice for every future module's code dir.
