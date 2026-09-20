@@ -1,0 +1,796 @@
+🐼 Panda Agent — OSS Desktop V1
+1. What are we building?
+
+Panda Agent is an open-source AI Data Analyst Desktop application.
+
+Panda ka kaam sirf CSV clean karna nahi hai. Ye user ke business/data sources ko access karke:
+
+data samjhega
+relevant data find karega
+data quality check karega
+calculations karega
+trends/anomalies identify karega
+possible causes investigate karega
+hypotheses test karega
+evidence verify karega
+charts/reports banayega
+analysis ko save karega
+aur user ke question ka evidence-based answer dega.
+Core philosophy
+
+One brain, many specialized hands.
+
+Ek hi Panda Agent reasoning karega. Alag-alag agents bana kar coordination nahi karenge.
+
+LLM reason karega.
+Tools actual computation/execution karenge.
+
+LLM ko huge raw datasets directly context mein nahi diye jayenge.
+
+2. Panda ka exact example
+
+User Panda ko desktop app mein poochta hai:
+
+“Why did my sales drop in August?”
+
+Panda blindly saare data ko LLM mein nahi daalega.
+
+Step 1 — Understand question
+
+Panda identify karega:
+
+Metric: Revenue / Sales
+Period: August
+Comparison: Previous comparable period
+Question: Root-cause analysis
+Step 2 — Find authoritative data
+
+Data Catalog dekhega:
+
+Revenue
+├── Shopify → Orders        [Authoritative]
+├── Stripe → Payments
+└── PostgreSQL → Sales Summary
+
+Panda decide karega ki revenue calculation ke liye Shopify Orders authoritative source hai.
+
+Step 3 — Query only what is needed
+
+For example:
+
+August revenue
+→ $72,431
+
+July revenue
+→ $100,320
+
+Panda khud calculation karega:
+
+Change = -27.8%
+
+LLM ko 500,000 order rows nahi milenge.
+
+Usko structured result milega:
+
+{
+  "metric": "revenue",
+  "august": 72431,
+  "july": 100320,
+  "change_percent": -27.8
+}
+Step 4 — Investigate drivers
+
+Panda ab candidate drivers investigate karega:
+
+Revenue
+├── Orders
+├── Average Order Value
+├── Products
+├── Customers
+├── Geography
+├── Discounts
+└── Other relevant dimensions
+
+Example:
+
+Orders:
+July   → 4,210
+August → 3,158
+Change → -25.0%
+
+AOV:
+July   → $23.83
+August → $22.94
+Change → -3.7%
+
+Panda sees that order volume explains much more of the revenue decline.
+
+Step 5 — Drill down
+
+Panda groups orders by product.
+
+Product C
+Units:
+July   → 1,240
+August → 521
+
+Change → -58%
+
+Then it checks inventory data.
+
+Product C inventory
+→ Stockout detected
+→ 17 days
+Step 6 — Hypothesis
+
+Panda creates:
+
+Hypothesis: Product C stockout materially contributed to the August revenue decline.
+
+Then it tests that hypothesis.
+
+It checks:
+
+timing
+magnitude
+contribution to overall decline
+alternative explanations
+availability of supporting data
+Step 7 — Evidence
+
+Suppose Panda calculates:
+
+Total revenue decline:
+$27,889
+
+Estimated Product C contribution:
+$18,900
+
+Contribution:
+~68%
+
+Now Panda has evidence.
+
+Step 8 — Final answer
+
+Something like:
+
+August revenue decreased by 27.8% compared with July.
+
+The largest measurable driver was Product C. Its unit sales fell 58% during August, and inventory data shows a 17-day stockout during the same period. Product C accounts for approximately 68% of the total revenue decline.
+
+Based on the available data, the Product C stockout is the strongest supported explanation for the decline.
+
+Limitation: Panda could not evaluate X because that data source wasn't connected.
+
+That's Panda.
+
+Not:
+
+“I think your sales dropped because customers lost interest.”
+
+No bullshit. 😄
+
+3. Adaptive investigation
+
+Workflow rigid waterfall nahi hoga.
+
+It will be a bounded adaptive investigation loop.
+
+Question
+   ↓
+Understand
+   ↓
+Find Source
+   ↓
+Query
+   ↓
+Validate
+   ↓
+Analyze
+   ↓
+Find Driver
+   ↓
+Investigate
+   ↓
+Hypothesis
+   ↓
+Test
+   ↓
+Verify
+   ↓
+Enough Evidence?
+   ├── No → Fetch/Query More Data
+   │          ↓
+   │       Continue Investigation
+   │
+   └── Yes
+        ↓
+     Finding
+        ↓
+     Artifact
+
+Example mein Product C stockout mila aur Panda ko inventory data ki zarurat padi, toh investigation wapas data access layer par ja sakti hai.
+
+Lekin endless loop nahi chalega.
+
+Investigation ke paas:
+
+stopping criteria
+iteration limits
+query limits
+timeout
+duplicate-query protection
+evidence requirements
+
+honge.
+
+4. Data Sources
+
+Panda architecture multiple types ke sources ko support karega.
+
+Databases
+PostgreSQL
+MySQL
+Cloud warehouses
+Snowflake
+BigQuery
+CRM
+Salesforce
+HubSpot
+E-commerce
+Shopify
+WooCommerce
+Analytics
+Google Analytics
+Mixpanel
+Communication
+Slack
+Microsoft Teams
+Knowledge / Documents
+Notion
+Google Drive
+Finance / Payments
+Stripe
+QuickBooks
+Files
+CSV
+Excel
+Semantic/vector
+Qdrant Cloud
+pgvector/PostgreSQL capability
+
+Architecture connector-based hogi, so future connectors add karna core rewrite nahi banega.
+
+5. Data Catalog
+
+Panda ke paas ek semantic Data Catalog hoga.
+
+Example:
+
+Revenue
+├── Shopify
+│   └── orders
+├── Stripe
+│   └── payments
+└── PostgreSQL
+    └── sales_summary
+
+Customers
+├── Salesforce
+└── Shopify
+
+Marketing
+├── Google Analytics
+└── Meta Ads
+
+Communication
+├── Slack
+└── Teams
+
+Catalog mein information ho sakti hai:
+
+source
+entity
+table
+fields
+metrics
+dimensions
+date fields
+authority
+freshness
+relationships
+permissions
+lineage
+
+Iska purpose hai:
+
+Panda ko pata ho ki company ka data kahan hai.
+
+Taaki har question par har source search na kare.
+
+6. Core capabilities
+Source Discovery
+list_sources
+inspect_source
+inspect_schema
+find_data
+Data Access
+query_data
+fetch_dataset
+materialize_dataset
+release_dataset
+Data Quality
+profile_dataset
+check_missing
+check_duplicates
+check_invalid_values
+check_format_consistency
+check_date_coverage
+check_schema
+assess_data_quality
+
+Quality ka purpose cleaning karna nahi, pehle ye determine karna hai:
+
+“Kya ye data is analysis ke liye trustworthy hai?”
+
+7. Analytical engine
+Core analysis
+aggregation
+grouping
+filtering
+sorting
+metric calculation
+segmentation
+Statistical analysis
+distribution analysis
+correlation analysis
+percentile analysis
+variance analysis
+Time-series
+period comparison
+percentage change
+trend detection
+anomaly detection
+Business analysis
+contribution analysis
+driver analysis
+segment analysis
+8. Investigation engine
+
+Panda ka important differentiator yahin hai.
+
+Tools:
+
+create_hypothesis
+test_hypothesis
+compare_segments
+drill_down
+evaluate_evidence
+verify_finding
+
+Investigation state roughly:
+
+Question
+   ↓
+Intent
+   ↓
+Sources
+   ↓
+Queries
+   ↓
+Observations
+   ↓
+Hypotheses
+   ↓
+Tests
+   ↓
+Evidence
+   ↓
+Findings
+   ↓
+Conclusion
+
+Is state ko maintain kiya jayega taaki follow-up question par Panda poora analysis dobara na kare.
+
+9. Semantic / unstructured data
+
+Structured business data ke liye:
+
+SQL / Pandas / NumPy / statistics = source of numerical truth
+
+Unstructured data ke liye:
+
+Embeddings + vector retrieval = contextual information
+
+Example:
+
+User asks:
+
+“Why did sales fall?”
+
+Panda:
+
+Shopify
+   ↓
+Revenue calculation
+
+Slack
+   ↓
+"Product C is out of stock"
+   ↓
+Contextual evidence
+
+Vector retrieval structured analytics ko replace nahi karega.
+
+Vector architecture
+VectorStore
+     ↓
+Qdrant Adapter
+     ↓
+Qdrant Cloud
+
+No local Qdrant dependency.
+
+10. LLM architecture
+
+Panda local LLM run nahi karega.
+
+BYOK model:
+
+LLMProvider
+├── Gemini Adapter
+├── Claude Adapter
+└── Groq Adapter
+
+User apni API key provide karega.
+
+LLM ka role:
+
+understand question
+plan investigation
+select tools
+interpret results
+create hypotheses
+evaluate evidence
+explain findings
+
+LLM ka role raw data processing karna nahi hai.
+
+11. Memory & State
+
+Three concepts separate rahenge.
+
+Conversation Context
+
+Current chat.
+
+Investigation State
+
+Current question ka complete analytical state:
+
+Question
+Intent
+Sources
+Queries
+Observations
+Hypotheses
+Tests
+Evidence
+Findings
+Conclusion
+Artifacts
+Persistent Company Knowledge
+
+Long-term useful information:
+
+company terminology
+known entities
+business context
+useful relationships
+previous validated knowledge
+
+Redis permanent source of truth nahi hoga.
+
+Redis primarily:
+
+session state
+cache
+schema cache
+investigation state
+temporary dataset references
+result cache
+artifact cache
+job state
+
+ke liye use hoga.
+
+12. Artifact system
+
+Panda analysis ko sirf chat answer bana ke nahi chhodega.
+
+Generate/save kar sakta hai:
+
+charts
+CSV
+Excel
+PDF
+analysis reports
+finalized datasets
+investigation records
+
+Flow:
+
+Source
+ ↓
+Working Dataset
+ ↓
+Analysis
+ ↓
+Finalized Dataset / Artifact
+
+Working data temporary ho sakta hai.
+
+Finalized output persist kiya ja sakta hai.
+
+13. Visualization
+
+Panda automatically relevant visualization create kar sakta hai:
+
+line charts
+bar charts
+distributions
+comparisons
+contribution charts
+anomaly/trend charts
+
+Visualization analysis state se generate hogi.
+
+Agar user baad mein bole:
+
+“Iska graph bana.”
+
+Panda analysis dobara nahi karega.
+
+Existing result → visualization.
+
+14. Execution architecture
+
+Current unrestricted exec() style execution ko directly expose nahi karenge.
+
+Interface:
+
+ExecutionBackend
+├── LocalExecutor
+├── DockerExecutor       (future)
+├── VMExecutor           (future)
+└── CauslyExecutor       (future)
+
+V1:
+
+Local controlled execution.
+
+Allowed analytical environment:
+
+Pandas
+NumPy
+Matplotlib
+DuckDB
+approved statistical libraries
+
+Block:
+
+shell/OS commands
+subprocess
+arbitrary network access
+credential access
+environment secrets
+arbitrary external programs
+package installation
+modification of source databases
+
+Important: V1 local executor ko true hardened security sandbox claim nahi karna hai. Stronger isolation future backend mein add ho sakta hai.
+
+15. Tool Gateway
+
+LLM ko directly 40–50 tools ka uncontrolled access nahi milega.
+
+Beech mein:
+
+Panda Agent
+     ↓
+Tool Gateway
+     ↓
+Tools
+     ↓
+Data / Execution / Sources
+
+Gateway enforce karega:
+
+permissions
+input validation
+query limits
+row limits
+timeout
+source access
+security
+audit information
+action boundaries
+failure handling
+
+Har tool ka proper contract hoga:
+
+Name
+Purpose
+Input schema
+Output schema
+Permission
+Limits
+Timeout
+Source requirements
+Failure behavior
+16. Human-in-the-loop
+
+Panda analyst hai, uncontrolled operator nahi.
+
+Automatically
+read data
+inspect
+query
+analyze
+validate
+create charts
+create reports
+save analysis
+Explicit approval
+external email send karna
+external sharing
+external business data modify karna
+17. Desktop application
+
+Panda OSS ka actual product Desktop App hi hoga.
+
+CLI-first approach nahi.
+
+Architecture:
+
+Panda Desktop
+│
+├── Tauri
+│
+├── Next.js + TypeScript UI
+│
+└── Python Panda Runtime
+       │
+       ├── Agent
+       ├── Tools
+       ├── Connectors
+       ├── Analysis
+       ├── Investigation
+       └── Execution
+
+UI details abhi lock nahi karenge. Build karte waqt UI/UX decide karenge.
+
+But UI ultimately chat-centric hoga with:
+
+streaming responses
+tables
+charts
+findings
+evidence
+source information
+investigation status
+artifacts
+18. Tech Stack
+Frontend/Desktop
+Tauri
+Next.js
+TypeScript
+Tailwind CSS
+Backend/Core
+Python
+FastAPI
+Pandas
+NumPy
+DuckDB
+Matplotlib
+statistical libraries as required
+LLM
+Gemini
+Claude
+Groq
+
+through:
+
+LLMProvider
+Database / State
+PostgreSQL capability
+Redis
+simple artifact/data storage
+Parquet/DuckDB where useful
+
+No unnecessarily complicated distributed storage architecture.
+
+Vector
+Qdrant Cloud
+provider abstraction for embeddings
+Desktop packaging
+Tauri
+Python runtime bundled with application
+platform installers
+
+Target:
+
+Windows → .exe
+macOS   → .dmg
+Linux   → AppImage / .deb
+19. What Panda V1 is NOT
+
+Ye bhi lock kar dete hain bhai:
+
+❌ Multi-agent system
+❌ Autonomous business operator
+❌ CRM
+❌ Local LLM
+❌ Local vector DB
+❌ CLI-first product
+❌ Docker requirement for users
+❌ Raw datasets directly into LLM context
+❌ Blindly searching every connector
+❌ Unrestricted Python execution
+❌ Giant prompt as “intelligence”
+❌ WhatsApp connector
+❌ Complex distributed infrastructure
+❌ Hosted SaaS implementation right now
+
+20. Final V1 architecture
+                         ┌──────────────────┐
+                         │   Panda Desktop  │
+                         │ Tauri + Next.js  │
+                         └────────┬─────────┘
+                                  │
+                                  ▼
+                         ┌──────────────────┐
+                         │    Panda Agent   │
+                         │   Single Brain   │
+                         └────────┬─────────┘
+                                  │
+                    ┌─────────────┼─────────────┐
+                    ▼             ▼             ▼
+              Data Catalog   Tool Gateway   LLM Provider
+                    │             │             │
+                    │             │       ┌─────┼─────┐
+                    │             │       ▼     ▼     ▼
+                    │             │    Gemini Claude Groq
+                    │             │
+                    ▼             ▼
+               Connectors     Execution
+                    │          Backend
+          ┌─────────┼──────┐       │
+          ▼         ▼      ▼       ▼
+       Database   SaaS   Files   Local Executor
+          │         │      │
+          └─────────┼──────┘
+                    ▼
+              Working Data
+                    │
+                    ▼
+             Analysis Engine
+                    │
+          ┌─────────┼─────────┐
+          ▼         ▼         ▼
+       Quality   Statistics Investigation
+                              │
+                              ▼
+                         Verification
+                              │
+                              ▼
+                           Finding
+                              │
+                 ┌────────────┼────────────┐
+                 ▼            ▼            ▼
+               Chart        Report      Dataset
+
+Bas ek line mein Panda V1:
+
+Panda is an open-source desktop AI Data Analyst that connects to real data sources, performs deterministic analysis outside the LLM, investigates questions through an adaptive evidence-driven loop, and gives users verified, explainable findings and artifacts.
