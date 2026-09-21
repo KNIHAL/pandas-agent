@@ -61,6 +61,10 @@ class ToolGateway:
     def list_tools(self) -> list[str]:
         return sorted(self._contracts.keys())
 
+    def get_contract(self, tool_name: str) -> ToolContract | None:
+        """Look up a registered tool's contract by name, or None if unregistered."""
+        return self._contracts.get(tool_name)
+
     def invoke(self, tool_name: str, raw_input: dict[str, Any]) -> ToolResult:
         start = time.monotonic()
         contract = self._contracts.get(tool_name)
