@@ -35,6 +35,25 @@ needs to import `tool_gateway`, which isn't merged to the base branch yet).
   parsed with a malformed-JSON fallback to `{}`.
 - Tests: `tests/test_agent_core_groq.py`, 16/16 passing, mocked `groq.Groq`
   client — no API key needed.
-- All three adapters (Gemini, Claude, Groq) done. Next: core agent loop
-  (plan → select tool → execute → observe → repeat), then Conversation
-  Context handling, then hooking into Tool Gateway.
+- `agent_core/context.py` — `ConversationContext`: system prompt + message
+  history, `add_user`/`add_assistant`/`add_tool_result` helpers,
+  `history()` (returns a copy), `trim(max_messages)` (basic message-count
+  trim, V1 — no token counting, no tool_use/tool_result pairing
+  preservation across the trim boundary).
+- `agent_core/loop.py` — `AgentLoop.run(context)`: plan (LLMProvider.complete)
+  → if no tool_calls, return the final assistant Message → else execute
+  every tool_call via a `ToolExecutor` (structural Protocol: anything with
+  `.invoke(tool_name, raw_input)`), append each result as a TOOL message,
+  repeat. Raises `AgentLoopError` past `max_iterations`. Deliberately does
+  NOT import tool_gateway — `ToolGateway.invoke` already matches
+  `ToolExecutor` structurally, so the "Hook into Tool Gateway" task should
+  need no adapter, just building the `list[ToolSpec]` from
+  `ToolContract`s and passing a `ToolGateway` instance as the executor.
+- Tests: `tests/test_agent_core_context.py` (12/12), `tests/test_agent_core_loop.py`
+  (14/14) — loop tests use local `FakeLLMProvider`/`FakeToolExecutor` doubles,
+  no tool_gateway or real API involved.
+- 127/127 tests passing repo-wide.
+- Next (last task): hook `AgentLoop`/`ToolSpec` up to a real `ToolGateway` —
+  build `ToolSpec` from `ToolContract` (name, purpose→description, JSON
+  schema from `input_schema.model_json_schema()`), confirm `ToolGateway`
+  satisfies `ToolExecutor` as-is.

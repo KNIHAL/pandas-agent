@@ -4,7 +4,7 @@ Current active module: agent-core
 
 # Module Status
 
-- agent-core — 🔧 in-progress (branch feature/agent-core, off feature/tool-gateway; LLMProvider interface + all 3 adapters (Gemini/Claude/Groq) done, 101/101 total tests passing)
+- agent-core — 🔧 in-progress (branch feature/agent-core, off feature/tool-gateway; LLMProvider interface + all 3 adapters + core loop + conversation context done, 127/127 total tests passing; only Tool Gateway hook-up left)
 - tool-gateway — ✅ done (branch feature/tool-gateway; all tasks complete, 44/44 tests passing)
 - execution-backend — ⬜ pending (legacy `core/execution.py` exists from old CrewAI version, needs review)
 - data-catalog — ⬜ pending
