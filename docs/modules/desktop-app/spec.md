@@ -1,4 +1,4 @@
-last updated: 2026-09-20
+last updated: 2026-09-21
 
 # desktop-app — Spec
 
@@ -9,7 +9,9 @@ last updated: 2026-09-20
 - UI/UX details not locked yet — decide during build.
 
 ## Packaging targets
-- Windows → .exe, macOS → .dmg, Linux → AppImage/.deb
+- Windows -> .exe, macOS -> .dmg, Linux -> AppImage/.deb
+- Auto-update required across all 3 platforms (mechanism TBD at build time, e.g. Tauri's built-in updater).
 
 ## Boundaries
-- Last module to build — depends on all backend modules being stable.
+- Last module to build -- depends on all backend modules being stable.
+- Distribution/download page is a separate module (landing-page), not part of this one.
