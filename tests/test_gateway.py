@@ -114,6 +114,17 @@ def test_list_tools_returns_registered_names_sorted(tmp_path):
     assert gw.list_tools() == ["alpha", "zeta"]
 
 
+def test_get_contract_returns_registered_contract_by_name(tmp_path):
+    gw = new_gateway(tmp_path)
+    contract = ToolContract(
+        name="echo", purpose="Echo.", input_schema=EchoIn, output_schema=EchoOut,
+        permission=Permission.READ_DATA, handler=echo_handler,
+    )
+    gw.register(contract)
+    assert gw.get_contract("echo") is contract
+    assert gw.get_contract("does_not_exist") is None
+
+
 def test_registering_duplicate_tool_name_raises_value_error(tmp_path):
     gw = new_gateway(tmp_path)
     contract = ToolContract(

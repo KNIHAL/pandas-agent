@@ -49,11 +49,21 @@ needs to import `tool_gateway`, which isn't merged to the base branch yet).
   `ToolExecutor` structurally, so the "Hook into Tool Gateway" task should
   need no adapter, just building the `list[ToolSpec]` from
   `ToolContract`s and passing a `ToolGateway` instance as the executor.
-- Tests: `tests/test_agent_core_context.py` (12/12), `tests/test_agent_core_loop.py`
-  (14/14) — loop tests use local `FakeLLMProvider`/`FakeToolExecutor` doubles,
-  no tool_gateway or real API involved.
-- 127/127 tests passing repo-wide.
-- Next (last task): hook `AgentLoop`/`ToolSpec` up to a real `ToolGateway` —
-  build `ToolSpec` from `ToolContract` (name, purpose→description, JSON
-  schema from `input_schema.model_json_schema()`), confirm `ToolGateway`
-  satisfies `ToolExecutor` as-is.
+- `agent_core/gateway_adapter.py` — the only agent_core file that imports
+  `tool_gateway`. `tool_spec_from_contract(contract)` builds a `ToolSpec`
+  (name, purpose→description, `input_schema.model_json_schema()`→parameters).
+  `tool_specs_from_gateway(gateway)` builds the full list for every
+  registered tool. `ToolGateway` needed no adapter to act as an
+  `AgentLoop` `ToolExecutor` — confirmed via `isinstance(gateway, ToolExecutor)`
+  (the Protocol is `runtime_checkable`).
+- Added `ToolGateway.get_contract(name)` (small addition on the tool-gateway
+  side) so the adapter can look up contracts by name; `list_tools()` alone
+  only returned names.
+- Tests: `tests/test_agent_core_gateway_adapter.py` (6/6) — spec-building,
+  the Protocol check, and two end-to-end `AgentLoop` runs against a *real*
+  `ToolGateway` (only the LLM side is faked): one happy path, one where a
+  denied permission surfaces as an `ERROR:` tool message the model can see
+  and recover from.
+- Module complete. 134/134 tests passing repo-wide.
+- Next module per STATUS.md: pick from execution-backend, data-catalog,
+  connectors, investigation-engine, artifacts-visualization, desktop-app.
