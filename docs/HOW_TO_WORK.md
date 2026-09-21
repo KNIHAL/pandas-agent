@@ -15,7 +15,7 @@ last updated: 2026-09-20
 - Every doc file: bullet points only, no prose paragraphs.
 - Every file starts with `last updated: <date>`.
 - Keep `progress.md` rolling — latest state + last 2-3 milestones only, not full history.
-- Module folder names = exact code folder/repo naming (kebab-case, matches actual dir).
+- Module folder names in `docs/modules/` = kebab-case, matches the module name. Code directories use snake_case of the same name (e.g. `docs/modules/tool-gateway/` ↔ `tool_gateway/`) — Python can't import hyphenated package names.
 
 ## When a work session ends
 - Update `tasks.md` (tick done items).
