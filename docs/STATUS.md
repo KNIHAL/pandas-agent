@@ -1,6 +1,6 @@
 last updated: 2026-09-21
 
-Current active module: data-catalog
+
 
 # Module Status
 
@@ -13,4 +13,5 @@ Current active module: data-catalog
 - artifacts-visualization — ⬜ pending (legacy `core/chart_generators/*` exists, reusable as-is)
 - desktop-app — ⬜ pending
 
-Legend: ⬜ pending · 🔧 in-progress · ✅ done
+
+Legend: pending / in-progress / done
