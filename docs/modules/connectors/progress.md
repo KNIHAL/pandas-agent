@@ -5,7 +5,9 @@ last updated: 2026-09-22
 Module complete on branch `feature/connectors` (off `main`).
 
 - `connectors/base.py`: abstract `Connector` interface (test_connection, list_entities, get_schema, fetch).
-- Connectors built so far, easy→hard order: CSV, Excel, MySQL, Postgres, Notion, Slack, Google Drive, Stripe, BigQuery, GA4, Mixpanel, WooCommerce.
+- Connectors built so far, easy→hard order: CSV, Excel, MySQL, Postgres, Notion, Slack, Google Drive, Stripe, BigQuery, GA4, Mixpanel, WooCommerce, Salesforce, HubSpot.
+- `salesforce_connector.py`: OAuth2 username-password flow (connected app + user creds, no interactive consent redirect), entities are SObjects, fetch builds SOQL. Mocked HTTP tests.
+- `hubspot_connector.py`: private-app Bearer token, entities are CRM object types (contacts/companies/deals/tickets/products/line_items), plain list GET or /search POST when filters given. Mocked HTTP tests.
 - `mixpanel_connector.py`: entity = event name, raw events via the Export API (JSONL), properties flattened into columns. Mocked HTTP tests.
 - `woocommerce_connector.py`: entities are WooCommerce's list-able resources (products/orders/customers/coupons/refunds), consumer key/secret Basic auth, page-number pagination. Mocked HTTP tests.
 - `stripe_connector.py`: entities are Stripe's list-able resource types (customers/charges/...); filters pass straight through as Stripe query params. Mocked HTTP tests — Stripe doesn't currently allow Indian self-signup.
@@ -19,6 +21,6 @@ Module complete on branch `feature/connectors` (off `main`).
 - `contracts.py` + `gateway_adapter.py`: pydantic I/O schemas + `make_connector_contracts(registry)` wiring all 12 data-access/quality tools into `tool_gateway.ToolContract` (READ_DATA, except `materialize_dataset` which needs ARTIFACT_WRITE). Connector-specific tools (if any get added later) aren't wired yet — current 12 tools are source-agnostic (they take `source`/`entity`, work with any registered connector).
 - Tests: 73 passing, 16 skipped (Postgres/MySQL skip automatically if no live container reachable at test time).
 - Added `psycopg2-binary`, `pyarrow`, `openpyxl`, `pymysql`, `requests`, `google-auth` to requirements.txt.
-- Remaining connectors, easy→hard: Salesforce, HubSpot, QuickBooks, Teams, Shopify, Snowflake.
+- Remaining connectors, easy→hard: QuickBooks, Teams, Shopify, Snowflake.
 - Qdrant/semantic-retrieval skipped by Kumar's call: doesn't fit the row-fetch `Connector` interface (similarity search, not exact match) and no clear use yet — revisit once Investigation Engine's design makes the fit concrete.
 - Other remaining for later: `fetch_dataset`/`query_data` filters are V1 equality-only per spec; CSV/Excel connectors read whole files (no streaming) — both are known, deliberate V1 scope limits, not bugs.
