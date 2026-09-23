@@ -14,3 +14,4 @@ last updated: 2026-09-22
   - Large-data safeguards (sampling/row-limits for big tables): touches investigation-engine's analytical engine + execution-backend (query execution) + connectors (source-level limits).
   - Access control (row/column-level permission checks): touches data-catalog + connectors, not just investigation-engine.
   - Concurrent investigations (resource contention when multiple users/questions run at once): investigation-engine loop controller, needs real concurrency load to size correctly.
+- 2026-09-23 -- investigation-engine's compare_segments/drill_down gateway tools take `data: list[dict]` (records already fetched by the caller) instead of a dataset_id + live source fetch. Why: fetching real data by id is a connectors/execution-backend integration this module doesn't own; wiring that now would be guessing at a contract instead of confirming one. Revisit when those modules' data-fetch contracts are confirmed, likely at E2E phase.
