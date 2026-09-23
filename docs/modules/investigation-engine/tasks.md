@@ -1,8 +1,8 @@
-last updated: 2026-09-20
+last updated: 2026-09-23
 
 # investigation-engine — Tasks
 
-- [ ] Investigation State schema + Redis persistence
+- [x] Investigation State schema + Redis persistence
 - [ ] Analytical engine: core ops (aggregation/grouping/filtering/sorting/metric calc/segmentation)
 - [ ] Analytical engine: statistical (distribution/correlation/percentile/variance)
 - [ ] Analytical engine: time-series (period comparison/% change/trend/anomaly)
