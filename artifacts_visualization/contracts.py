@@ -33,3 +33,32 @@ class GenerateChartOutput(BaseModel):
     status: Literal["SUCCESS"]
     html_path: str
     chart_type: str
+
+
+class ExportDatasetInput(BaseModel):
+    format: Literal["csv", "excel", "pdf"] = Field(description="Export file format.")
+    data: list[dict] = Field(description="Rows to export, e.g. [{'col': value, ...}, ...].")
+    title: str = Field(default="Dataset", description="Used as the PDF title; ignored for csv/excel.")
+    filename_prefix: str = Field(default="dataset", description="Prefix for the generated filename.")
+
+
+class ExportDatasetOutput(BaseModel):
+    status: Literal["SUCCESS"]
+    format: str
+    file_path: str
+
+
+class ReportSection(BaseModel):
+    heading: str
+    body: str
+
+
+class GenerateReportInput(BaseModel):
+    title: str
+    sections: list[ReportSection] = Field(description="Ordered heading/body sections of the report.")
+    filename_prefix: str = Field(default="report")
+
+
+class GenerateReportOutput(BaseModel):
+    status: Literal["SUCCESS"]
+    file_path: str

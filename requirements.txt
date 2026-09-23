@@ -30,3 +30,6 @@ requests>=2.31.0
 google-auth>=2.30.0
 google-cloud-bigquery>=3.25.0
 snowflake-connector-python>=3.10.0
+
+# artifacts-visualization
+reportlab>=5.0.0
