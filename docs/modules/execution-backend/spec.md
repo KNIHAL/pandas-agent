@@ -1,4 +1,4 @@
-last updated: 2026-09-20
+last updated: 2026-09-22
 
 # execution-backend — Spec
 
@@ -8,13 +8,14 @@ last updated: 2026-09-20
 - V1 = local controlled execution only.
 
 ## Allowed
-- Pandas, NumPy, Matplotlib, DuckDB, approved stats libraries.
+- Pandas, NumPy, Matplotlib, approved stats libraries.
+- DuckDB -- DEFERRED, not part of V1 allowed-libs build. See DECISIONS.md (2026-09-22).
 
 ## Blocked
 - shell/OS commands, subprocess, arbitrary network access, credential/env secret access, arbitrary external programs, package installation, modification of source databases.
 
 ## Note
-- V1 local executor is NOT a hardened security sandbox — don't claim it is. Stronger isolation is future work.
+- V1 local executor is NOT a hardened security sandbox -- don't claim it is. Stronger isolation is future work.
 
 ## Legacy
-- Old `core/execution.py` exists from CrewAI version — review it, reuse safe parts, don't assume it already meets the blocklist above.
+- Old `core/execution.py` exists from CrewAI version -- review it, reuse safe parts, don't assume it already meets the blocklist above.

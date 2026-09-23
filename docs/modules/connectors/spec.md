@@ -1,11 +1,12 @@
-last updated: 2026-09-20
+last updated: 2026-09-22
 
 # connectors — Spec
 
 ## What
 - Connector-based architecture so adding a new source later isn't a core rewrite.
-- Target sources (over time): Postgres, MySQL, Snowflake, BigQuery, Salesforce, HubSpot, Shopify, WooCommerce, Google Analytics, Mixpanel, Slack, Teams, Notion, Google Drive, Stripe, QuickBooks, CSV, Excel, Qdrant Cloud/pgvector.
+- Target sources (over time): Postgres, MySQL, Snowflake, BigQuery, Salesforce, HubSpot, Shopify, WooCommerce, Google Analytics, Mixpanel, Slack, Teams, Notion, Google Drive, Stripe, QuickBooks, CSV, Excel.
 - V1 priority: start with 1 file connector (CSV) + 1 DB connector (Postgres) to prove the pattern end-to-end.
+- Qdrant Cloud/pgvector -- DEFERRED, not part of this module's V1. See DECISIONS.md (2026-09-22).
 
 ## Data Access tools (via tool-gateway)
 - query_data, fetch_dataset, materialize_dataset, release_dataset
