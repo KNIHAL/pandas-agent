@@ -2,15 +2,27 @@ last updated: 2026-09-21
 
 # How to Work on This Project (read this first, every new chat)
 
-## Read order
-1. This file.
+## Read order -- STRICT, no exceptions
+1. HOW_TO_WORK.md
 2. STATUS.md -- find current active module.
 3. docs/modules/<active-module>/spec.md
 4. docs/modules/<active-module>/tasks.md
 5. docs/modules/<active-module>/progress.md
-- Only read OVERVIEW.md if deeper product context is needed.
-- Do NOT read raw.txt -- it's long and token-expensive. Everything needed is already distilled into the module spec.md files. Only fall back to raw.txt if a module spec is genuinely missing something and you've exhausted the spec.
-- Do NOT read other modules' folders unless the active module depends on them.
+
+That's it for docs. Do NOT read: OVERVIEW.md, raw.txt, DECISIONS.md, or any
+other module's spec/tasks/progress -- even if it feels "helpful" or related.
+If something is genuinely unclear after these 5, ASK the user. Don't self-justify
+reading more files "just in case."
+
+## Code files -- also STRICT
+- Only read/edit code inside the active module's own code directory.
+- Do NOT open another module's code files (e.g. agent-core, execution-backend)
+  "for context" while working on a different module.
+- If the active module's code genuinely needs to call into another module
+  (a real integration point, not a guess) -- ask the user first, don't go
+  explore other modules' code on your own to figure it out.
+- A module's own progress.md/spec.md should already say what interface/contract
+  another module exposes, if that's needed. If it doesn't say it, ask -- don't read the other module's code to find out.
 
 ## Format rules
 - Every doc file: bullet points only, no prose paragraphs.
