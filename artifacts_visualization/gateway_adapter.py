@@ -1,8 +1,11 @@
-"""Wraps artifacts_visualization's chart generation as a tool_gateway ToolContract.
+"""Wraps artifacts_visualization's generation/export logic as tool_gateway
+ToolContracts.
 
-Same split/style as investigation_engine's adapter: the chart-generator
-classes (bar/line/pie) are internal implementation, only the single
-`generate_chart` tool is agent-facing.
+generate_chart/export_dataset/generate_report produce "working" files.
+finalize_artifact/list_artifacts/regenerate_artifact are the persistence
+layer on top (spec.md's Finalized Dataset/Artifact stage): finalize_artifact
+records a working output's generator_config so regenerate_artifact can
+rebuild the file later from the same analysis result, with no re-analysis.
 """
 from __future__ import annotations
 
@@ -11,10 +14,17 @@ from tool_gateway.contracts import FailureBehavior, Permission, ToolContract
 from artifacts_visualization.contracts import (
     ExportDatasetInput,
     ExportDatasetOutput,
+    FinalizeArtifactInput,
+    FinalizeArtifactOutput,
     GenerateChartInput,
     GenerateChartOutput,
     GenerateReportInput,
     GenerateReportOutput,
+    ListArtifactsInput,
+    ListArtifactsOutput,
+    RegenerateArtifactInput,
+    RegenerateArtifactOutput,
+    ReportSection,
 )
 from artifacts_visualization.bar import BarChartGenerator
 from artifacts_visualization.line import LineChartGenerator
@@ -25,6 +35,7 @@ from artifacts_visualization.exporters import (
     export_pdf_table,
     export_report,
 )
+from artifacts_visualization.repository import ArtifactRepository
 
 _GENERATORS = {
     "bar": BarChartGenerator,
@@ -39,8 +50,10 @@ _EXPORTERS = {
 }
 
 
-def make_artifacts_visualization_contracts(timeout_seconds: float = 15.0) -> list[ToolContract]:
-    """Build the artifacts-visualization ToolContract(s)."""
+def make_artifacts_visualization_contracts(
+    repo: ArtifactRepository, timeout_seconds: float = 15.0
+) -> list[ToolContract]:
+    """Build all artifacts-visualization ToolContracts for a given repository."""
 
     def generate_chart(inp: GenerateChartInput) -> GenerateChartOutput:
         generator_cls = _GENERATORS[inp.chart_type]
@@ -60,6 +73,45 @@ def make_artifacts_visualization_contracts(timeout_seconds: float = 15.0) -> lis
         sections = [s.model_dump() for s in inp.sections]
         path = export_report(inp.title, sections, inp.filename_prefix)
         return GenerateReportOutput(status="SUCCESS", file_path=path)
+
+    def finalize_artifact(inp: FinalizeArtifactInput) -> FinalizeArtifactOutput:
+        record = repo.finalize(
+            artifact_type=inp.artifact_type,
+            title=inp.title,
+            file_path=inp.file_path,
+            generator_config=inp.generator_config,
+        )
+        return FinalizeArtifactOutput(
+            id=record["id"],
+            artifact_type=record["artifact_type"],
+            title=record["title"],
+            file_path=record["file_path"],
+            created_at=record["created_at"],
+        )
+
+    def list_artifacts(inp: ListArtifactsInput) -> ListArtifactsOutput:
+        return ListArtifactsOutput(artifacts=repo.list(inp.artifact_type))
+
+    def regenerate_artifact(inp: RegenerateArtifactInput) -> RegenerateArtifactOutput:
+        record = repo.get(inp.artifact_id)
+        artifact_type = record["artifact_type"]
+        config = record["generator_config"]
+
+        if artifact_type == "chart":
+            chart_inp = GenerateChartInput(**config)
+            path = generate_chart(chart_inp).html_path
+        elif artifact_type in ("csv", "excel", "pdf"):
+            export_inp = ExportDatasetInput(**config)
+            path = export_dataset(export_inp).file_path
+        else:  # report
+            report_inp = GenerateReportInput(
+                title=config["title"],
+                sections=[ReportSection(**s) for s in config["sections"]],
+                filename_prefix=config.get("filename_prefix", "report"),
+            )
+            path = generate_report(report_inp).file_path
+
+        return RegenerateArtifactOutput(status="SUCCESS", artifact_type=artifact_type, file_path=path)
 
     return [
         ToolContract(
@@ -91,5 +143,37 @@ def make_artifacts_visualization_contracts(timeout_seconds: float = 15.0) -> lis
             timeout_seconds=timeout_seconds,
             failure_behavior=FailureBehavior.RETURN_ERROR,
             handler=generate_report,
+        ),
+        ToolContract(
+            name="finalize_artifact",
+            purpose="Persist a working chart/export/report as a finalized artifact, storing how to "
+            "reproduce it later.",
+            input_schema=FinalizeArtifactInput,
+            output_schema=FinalizeArtifactOutput,
+            permission=Permission.ARTIFACT_WRITE,
+            timeout_seconds=timeout_seconds,
+            failure_behavior=FailureBehavior.RETURN_ERROR,
+            handler=finalize_artifact,
+        ),
+        ToolContract(
+            name="list_artifacts",
+            purpose="List finalized artifacts, optionally filtered by type.",
+            input_schema=ListArtifactsInput,
+            output_schema=ListArtifactsOutput,
+            permission=Permission.READ_DATA,
+            timeout_seconds=timeout_seconds,
+            failure_behavior=FailureBehavior.RETURN_ERROR,
+            handler=list_artifacts,
+        ),
+        ToolContract(
+            name="regenerate_artifact",
+            purpose="Rebuild a finalized artifact's file from its stored generator_config -- no "
+            "re-analysis needed.",
+            input_schema=RegenerateArtifactInput,
+            output_schema=RegenerateArtifactOutput,
+            permission=Permission.ARTIFACT_WRITE,
+            timeout_seconds=timeout_seconds,
+            failure_behavior=FailureBehavior.RETURN_ERROR,
+            handler=regenerate_artifact,
         ),
     ]

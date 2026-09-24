@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import os
 import time
+import uuid
 
 import pandas as pd
 from reportlab.lib import colors
@@ -27,7 +28,7 @@ def _exports_dir() -> str:
 
 
 def _out_path(prefix: str, ext: str) -> str:
-    return os.path.join(_exports_dir(), f"{prefix}_{int(time.time())}.{ext}")
+    return os.path.join(_exports_dir(), f"{prefix}_{int(time.time())}_{uuid.uuid4().hex[:8]}.{ext}")
 
 
 def export_csv(data: list[dict], filename_prefix: str = "dataset") -> str:

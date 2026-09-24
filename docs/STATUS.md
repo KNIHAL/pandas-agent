@@ -1,6 +1,6 @@
 last updated: 2026-09-23
 
-Current active module: artifacts-visualization
+Current active module: none (artifacts-visualization just finished — pick next from Module Status below)
 
 # Module Status
 
@@ -10,7 +10,7 @@ Current active module: artifacts-visualization
 - data-catalog — ✅ done (branch feature/data-catalog, off main; SQLite storage, all 4 tools + authority resolution built, 15 new tests, 149/149 passing on main baseline)
 - connectors — ✅ done (branch feature/connectors, off main; base Connector interface + DatasetRegistry + 8 data-quality checks + 12 tools registered with tool-gateway, plus 17 connectors — CSV, Excel, MySQL, Postgres, Notion, Slack, Google Drive, Stripe, BigQuery, GA4, Mixpanel, WooCommerce, Salesforce, HubSpot, QuickBooks, Teams, Shopify, Snowflake — 164/164 tests passing, 16 skip without live DB containers up)
 - investigation-engine — ✅ done (branch feature/investigation-engine, off main; State schema, persistence, full analytical engine, bounded loop controller, 6 tools + tool-gateway registration all built; 72/72 module tests passing, 247/247 full-repo suite passing)
-- artifacts-visualization — 🔧 in-progress (branch feature/artifacts-visualization; `core/chart_generators/*` moved/adapted to `artifacts_visualization/`; generate_chart/export_dataset/generate_report tools wired into tool-gateway, 11/11 module tests passing; next: artifact persistence)
+- artifacts-visualization — ✅ done, pending PR (branch feature/artifacts-visualization; all 5 tasks complete: chart_generators moved to artifacts_visualization/, generate_chart/export_dataset/generate_report/finalize_artifact/list_artifacts/regenerate_artifact wired into tool-gateway with SQLite-backed persistence; 15/15 module tests, 426/426 full-repo suite)
 - desktop-app — ⬜ pending
 - landing-page — ⬜ pending (static site, detail TBD when started)
 

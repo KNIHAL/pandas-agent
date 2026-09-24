@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import uuid
 from abc import ABC, abstractmethod
 
 class ChartGenerator(ABC):
@@ -21,7 +22,7 @@ class ChartGenerator(ABC):
         if not os.path.exists(charts_dir):
             os.makedirs(charts_dir)
 
-        filename = f"chart_{self.chart_type}_{int(time.time())}.html"
+        filename = f"chart_{self.chart_type}_{int(time.time())}_{uuid.uuid4().hex[:8]}.html"
         filepath = os.path.join(charts_dir, filename)
 
         # Load template file using absolute path
